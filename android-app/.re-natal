@@ -1,0 +1,26 @@
+{
+  "name": "passAndroid",
+  "interface": "rum",
+  "envRoots": {
+    "dev": "env/dev",
+    "prod": "env/prod"
+  },
+  "modules": [
+    "react-native-fs",
+    "crypto-js"
+  ],
+  "imageDirs": [
+    "images"
+  ],
+  "platforms": {
+    "ios": {
+      "host": "localhost",
+      "modules": []
+    },
+    "android": {
+      "host": "localhost",
+      "modules": []
+    }
+  },
+  "autoRequire": false
+}
