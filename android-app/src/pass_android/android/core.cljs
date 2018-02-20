@@ -10,6 +10,7 @@
 (def ReactNative (js/require "react-native"))
 (def fs (js/require "react-native-fs"))
 
+(def status-bar (partial create-element (.-StatusBar ReactNative)))
 (def view (partial create-element (.-View ReactNative)))
 
 (def app-registry (.-AppRegistry ReactNative))
@@ -20,9 +21,10 @@
 
 (defc AppRoot [state]
   (view {:flex 1}
-    (view {:style {:position "absolute"}}
-          (password-modal state))
-    (password-list-page state)))
+        (status-bar {:backgroundColor "#009688"})
+        (view {:style {:position "absolute"}}
+              (password-modal state))
+        (password-list-page state)))
 
 (defonce root-component-factory (support/make-root-component-factory))
 

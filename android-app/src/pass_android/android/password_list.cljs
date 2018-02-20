@@ -8,8 +8,9 @@
 (def fs (js/require "react-native-fs"))
 (def ReactNative (js/require "react-native"))
 (def Crypto (js/require "crypto-js"))
+(def ActionButton (.-default (js/require "react-native-action-button")))
 
-
+(def action-button (partial create-element ActionButton))
 (def view (partial create-element (.-View ReactNative)))
 (def text (partial create-element (.-Text ReactNative)))
 (def image (partial create-element (.-Image ReactNative)))
@@ -19,101 +20,80 @@
 (def touchable-native-feedback (partial create-element (.-TouchableNativeFeedback ReactNative)))
 (def selectable-background (.. ReactNative -TouchableNativeFeedback SelectableBackground))
 
-(defn encrypt [plain k]
-  (.. Crypto -AES (encrypt plain k)))
-(defn decrypt [enc k]
-  (.. Crypto -AES (decrypt enc k)))
-
-(defn on-press [state]
+(defn refresh-files [state]
   (let [m @state
         folder (get m :folder)
         p-read (.readDir fs folder)]
-
-
+    (swap! state assoc :refreshing true)
     (-> p-read
         (.then #(swap! state assoc :files
                        (->> (js->clj % :keywordize-keys true)
-
                             (filter (fn [x] ((get x :isFile))))
-                            (mapv (fn [{:keys [path name]}] {:path path
-                                                             :key name
-                                                             :name name})))))
-        (.catch #(println "ERR" %)))))
-
-;; (.then (.readFile fs path "utf8")
-;;        (fn [d] (let [x (-> d
-;;                            (decrypt "test")
-;;                            str)
-;;                      mesg (if (zero? (count x))
-;;                             "Error"
-;;                             (->> x
-;;                                  (partition 2)
-;;                                  butlast
-;;                                  (map (fn [[a b]] (+ (* 16 (hex-alph a))
-;;                                                      (hex-alph b))))
-;;                                  (map char)
-;;                                  (apply str)))]
-;;                  (.show toast mesg (.-SHORT toast)))))
-
+                            (mapv (fn [{:keys [path name]}]
+                                    (let [fancy-name name]
+                                      {:path path
+                                       :key name
+                                       :name fancy-name
+                                       :filename name}))))
+                       :refreshing false))
+        (.catch #(swap! state assoc :refreshing false)))))
 
 (defc render-row
-  [state item]
-  (let [{:keys [path name]} item]
+  [state x]
+  (let [item (js->clj (.-item x) :keywordize-keys true)
+        {:keys [path name]} item]
     (touchable-native-feedback {:background selectable-background
-                                :onPress #(swap! state assoc :file-to-decrypt name)}
+                                :onPress #(swap! state assoc
+                                                 :file-to-decrypt path
+                                                 :file-to-decrypt-name name)}
                                (view {:style {:padding 20
-                                              :borderTopWidth 1}}
+                                              :borderBottomWidth 1}}
                                      (text name)))))
 
 (defc no-file-placeholder
   [state]
-  (view {:flex 1
-         :style {:justifyContent "center"
+  (view {:style {:flex 1
+                 :justifyContent "center"
                  :alignItems "center"}}
-        (text "No passfiles found :(")))
+        (text {:style {:opacity 0.5
+                       :fontSize 30}}
+              "No passfiles found :(")
+        (touchable-native-feedback {:background selectable-background
+                                    :onPress #(refresh-files state)}
+                                   (view {:elevation 5
+                                          :style {:backgroundColor "#009688"
+                                                  :borderRadius 5
+                                                  :marginTop 30
+                                                  :padding 10}}
+                                         (text {:style {:color "white"
+                                                        :fontSize 20
+                                                        :textAlign "center"}}
+                                               "Refresh")))))
 
+(defc password-list-header
+  [state]
+  (view {:style {:padding 20
+                 :backgroundColor "#009688"}
+         :elevation 10}
+
+        (text {:style {:fontSize 25
+                       :color "white"}}
+              "Pass3301")))
 (defc password-list-page
   [state]
   (let [m @state
         files (get m :files [])
-        folder (get m :folder [])]
+        folder (get m :folder [])
+        refreshing (get m :refreshing false)]
     (view {:style {:flexDirection "column"
-                   :marginTop 40
                    :flex 1}}
-          (text {:style {:fontSize 30
-                         :fontWeight "100"
-                         :marginBottom 10
-                         :textAlign "center"}}
-                "Password Manager")
-          (text {:style {:marginBottom 10
-                         :textAlign "center"}}
-                folder)
-          (view {:style {:justifyContent "space-around"
-                         :flexDirection "row"
-                         :marginLeft 20
-                         :marginRight 20
-                         :marginBottom 10}}
-                ;; (touchable-native-feedback {:background selectable-background
-                ;;                             :onPress #(on-press state)}
-                ;;                            (view {:style {:backgroundColor "#999"
-                ;;                                           :padding 10
-                ;;                                           :borderRadius 5}}
-                ;;                                  (text {:style {:color "white"
-                ;;                                                 :textAlign "center"
-                ;;                                                 :fontWeight "bold"}}
-                ;;                                        "Get pass list")))
-                (touchable-native-feedback {:background selectable-background
-                                            :onPress #(on-press state)}
-                                           (view {:style {:backgroundColor "#999"
-                                                          :padding 10
-                                                          :borderRadius 5}}
-                                                 (text {:style {:color "white"
-                                                                :textAlign "center"
-                                                                :fontWeight "bold"}}
-                                                       "Get pass list"))))
+          (password-list-header state)
           (if (empty? files)
             (no-file-placeholder state)
-            (view {:style {:borderBottomWidth 1}}
-                  (flat-list {:data files
-                              :renderItem (fn [x] (let [item (js->clj (.-item x) :keywordize-keys true)]
-                                                    (render-row state item)))}))))))
+            (flat-list {:data files
+                        :onRefresh #(refresh-files state)
+                        :refreshing refreshing
+                        :renderItem #(render-row state %)}))
+          (action-button {:buttonColor "#009688"
+                          :size 60
+                          :onPress #()}))))

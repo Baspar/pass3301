@@ -7,7 +7,9 @@
   },
   "modules": [
     "react-native-fs",
-    "crypto-js"
+    "crypto-js",
+    "react-native-action-button",
+    "react-native-vector-icons"
   ],
   "imageDirs": [
     "images"
