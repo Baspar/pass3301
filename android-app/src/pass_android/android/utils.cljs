@@ -1,8 +1,10 @@
 (ns pass-android.android.utils)
 
 (defn create-element [& args]
-  (if (= (type {})
-         (type (second args)))
+  (if (or (= (type {})
+             (type (second args)))
+          (= (type (zipmap (range 24) (range 24)))
+             (type (second args))))
     (let [[rn-comp opts & children] args]
       (apply js/React.createElement rn-comp (clj->js opts) children))
     (apply create-element (first args) {} (rest args))))

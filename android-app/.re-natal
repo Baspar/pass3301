@@ -9,7 +9,8 @@
     "react-native-fs",
     "crypto-js",
     "react-native-action-button",
-    "react-native-vector-icons"
+    "react-native-vector-icons",
+    "react-native-vector-icons/MaterialIcons"
   ],
   "imageDirs": [
     "images"
