@@ -2,7 +2,7 @@
   (:require-macros [rum.core :refer [defc]])
   (:require [re-natal.support :as support]
             [pass-android.android.password-list :refer [password-list-page]]
-            [pass-android.android.modals :refer [password-modal]]
+            [pass-android.android.modals.decrypt-password :refer [password-modal]]
             [pass-android.android.utils :refer [create-element hex-alph]]
             [rum.core :as rum]))
 

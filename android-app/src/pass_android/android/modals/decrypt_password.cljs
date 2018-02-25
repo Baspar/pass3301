@@ -1,18 +1,12 @@
-(ns pass-android.android.modals
+(ns pass-android.android.modals.decrypt-password
   (:require-macros [rum.core :refer [defc]])
   (:require [re-natal.support :as support]
-            [pass-android.android.utils :refer [create-element hex-alph]]
+            [pass-android.android.utils :refer [create-element hex-alph decrypt]]
             [goog.crypt.base64 :as b64]
             [rum.core :as rum]))
 
 (def fs (js/require "react-native-fs"))
 (def ReactNative (js/require "react-native"))
-(def Crypto (js/require "crypto-js"))
-
-(defn encrypt [plain k]
-  (.. Crypto -AES (encrypt plain k)))
-(defn decrypt [enc k]
-  (.. Crypto -AES (decrypt enc k)))
 
 (def view (partial create-element (.-View ReactNative)))
 (def text (partial create-element (.-Text ReactNative)))
