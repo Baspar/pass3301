@@ -8,7 +8,6 @@
 
 (def fs (js/require "react-native-fs"))
 (def ReactNative (js/require "react-native"))
-(def Crypto (js/require "crypto-js"))
 (def MaterialIcons (js/require "react-native-vector-icons/MaterialIcons"))
 (def ActionButton (.-default (js/require "react-native-action-button")))
 
@@ -100,6 +99,7 @@
                    :alignItems "center"}
            :elevation 5}
 
+
           (if searching?
             [(touchable-opacity {:onPress #(swap! state dissoc :searching :search)
                                  :background selectable-background}
@@ -126,7 +126,13 @@
                                   (icon {:name "close"
                                          :color "white"
                                          :size 30})))]
-            [(text {:style {:fontSize 25
+            [(touchable-opacity {:onPress #(swap! state assoc :drawer-open? true)
+                                 :background selectable-background}
+                                (icon {:name "menu"
+                                       :color "white"
+                                       :size 30}))
+             (text {:style {:fontSize 25
+                            :paddingLeft 15
                             :paddingTop 10
                             :paddingBottom 10
                             :flex 1

@@ -8,4 +8,3 @@
 (def fs (js/require "react-native-fs"))
 (def ReactNative (js/require "react-native"))
 (def Crypto (js/require "crypto-js"))
-
