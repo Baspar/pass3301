@@ -50,7 +50,10 @@
   [state]
   (view
     (view {:backgroundColor "#009688"
-           :padding 20
+           :paddingLeft 20
+           :flexDirection "row"
+           :alignItems "center"
+           :height 70
            :elevation 5}
           (text {:style {:color "white"
                          :fontSize 30}}
