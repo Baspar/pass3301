@@ -3,7 +3,8 @@
 (def fs (js/require "react-native-fs"))
 
 (defonce app-state
-  (atom {:folder (str (.-ExternalStorageDirectoryPath fs) "/.pass")
+  (atom {:folder [(.-ExternalStorageDirectoryPath fs)
+                  ".pass"]
          :files []}))
 
 (defonce refs

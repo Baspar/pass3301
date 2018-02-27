@@ -3,6 +3,8 @@
   (:require [re-natal.support :as support]
             [pass-android.android.utils :refer [create-element hex-alph decrypt]]
             [pass-android.android.state :refer [refs]]
+            [pass-android.android.actions :refer [dispatch!]]
+            [clojure.string :refer [join]]
             [goog.crypt.base64 :as b64]
             [rum.core :as rum]))
 
@@ -18,33 +20,58 @@
 (def flat-list (partial create-element (.. ReactNative -FlatList)))
 (def touchable-native-feedback (partial create-element (.-TouchableNativeFeedback ReactNative)))
 
-(defc drawer-row
-  [state x]
+(defc drawer-row-pass-list
+  [state]
   (let [m @state
-        item (js->clj (.-item x) :keywordize-keys true)
-        selected-option (get m :selected-menu "pass-list")
-        [bg-color fg-color] (if (= (:key item) selected-option)
+        selected-option (get m :selected-menu :pass-list)
+        [bg-color fg-color] (if (= :pass-list selected-option)
                               ["#eeeeee" "#009688"]
-                              ["white" "black"])
-        icon-name (case (:key item)
-                    "pass-list" "lock"
-                    "folder")]
+                              ["white" "black"])]
     (touchable-native-feedback {:onPress (fn []
-                                           (swap! state #(-> %
-                                                             (assoc :selected-menu (:key item))
-                                                             (assoc :drawer-open? false))))}
+                                           (if (= selected-option :pass-list)
+                                             (swap! state assoc :drawer-open? false)
+                                             (swap! state #(-> %
+                                                               (assoc :selected-menu :pass-list)
+                                                               (assoc :folder-loading? true)
+                                                               (assoc :drawer-open? false)))))}
                                (view {:flexDirection "row"
                                       :alignItems "center"
                                       :style {:padding 16
                                               :paddingLeft 16
                                               :backgroundColor bg-color}}
-                                     (icon {:name icon-name
+                                     (icon {:name "lock"
                                             :size 25
                                             :color fg-color
                                             :style {:marginRight 10}})
                                      (text {:style {:fontSize 15
                                                     :color fg-color}}
-                                           (get item :text))))))
+                                           "Pass list")))))
+
+(defc drawer-row-change-path
+  [state]
+  (let [m @state
+        selected-option (get m :selected-menu :pass-list)
+        [bg-color fg-color] (if (= :change-path selected-option)
+                              ["#eeeeee" "#009688"]
+                              ["white" "black"])
+        raw-folder (get m :folder)
+        folder (->> raw-folder
+                    (join "/")
+                    (str "/"))]
+    (touchable-native-feedback
+      {:onPress (fn [] (dispatch! state :change-directory-init raw-folder))}
+      (view {:flexDirection "row"
+             :alignItems "center"
+             :style {:padding 16
+                     :paddingLeft 16
+                     :backgroundColor bg-color}}
+            (icon {:name "folder"
+                   :size 25
+                   :color fg-color
+                   :style {:marginRight 10}})
+            (text {:style {:fontSize 15
+                           :color fg-color}}
+                  "Change path")))))
 
 (defc drawer
   [state]
@@ -58,10 +85,8 @@
           (text {:style {:color "white"
                          :fontSize 30}}
                 "Menu"))
-    (flat-list {
-                :data [{:text "Pass list" :key :pass-list}
-                       {:text "Change path" :key :change-path}]
-                :renderItem #(drawer-row state %)})))
+    (drawer-row-pass-list state)
+    (drawer-row-change-path state)))
 
 (defc drawer-modal
   [state & children]

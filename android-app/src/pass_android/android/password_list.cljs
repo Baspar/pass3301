@@ -3,6 +3,7 @@
   (:require [re-natal.support :as support]
             [clojure.string :refer [split join lower-case]]
             [pass-android.android.utils :refer [create-element hex-alph]]
+            [pass-android.android.actions :refer [dispatch!]]
             [goog.crypt.base64 :as b64]
             [rum.core :as rum]))
 
@@ -24,25 +25,6 @@
 (def touchable-opacity (partial create-element (.-TouchableOpacity ReactNative)))
 (def selectable-background (.. ReactNative -TouchableNativeFeedback SelectableBackground))
 
-(defn refresh-files [state]
-  (let [m @state
-        folder (get m :folder)
-        p-read (.readDir fs folder)]
-    (swap! state assoc :refreshing true)
-    (-> p-read
-        (.then #(swap! state assoc :files
-                       (->> (js->clj % :keywordize-keys true)
-                            (filter (fn [x] ((get x :isFile))))
-                            (mapv (fn [{:keys [path name]}]
-                                    (let [fancy-name (->> (split name #"\.")
-                                                          (butlast)
-                                                          (join "."))]
-                                      {:path path
-                                       :key name
-                                       :name fancy-name
-                                       :filename name}))))
-                       :refreshing false))
-        (.catch #(swap! state assoc :refreshing false)))))
 
 (defc render-row
   [state x]
@@ -65,7 +47,7 @@
                        :fontSize 30}}
               "No passfiles found :(")
         (touchable-native-feedback {:background selectable-background
-                                    :onPress #(refresh-files state)}
+                                    :onPress #(dispatch! state :refresh-files)}
                                    (view {:elevation 5
                                           :style {:backgroundColor "#009688"
                                                   :borderRadius 5
@@ -79,8 +61,8 @@
 (defn matches
   [string pattern]
   (cond
-    (empty? string) false
     (empty? pattern) true
+    (empty? string) false
     :else (if (= (lower-case (first string))
                  (lower-case (first pattern)))
             (recur (rest string) (rest pattern))
@@ -161,7 +143,7 @@
           (if (empty? files)
             (no-file-placeholder state)
             (flat-list {:data filtered-files
-                        :onRefresh #(refresh-files state)
+                        :onRefresh #(dispatch! state :refresh-files)
                         :refreshing refreshing
                         :ListEmptyComponent (text {:style {:fontSize 30
                                                            :paddingTop 50
