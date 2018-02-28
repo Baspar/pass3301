@@ -2,7 +2,7 @@
   (:require-macros [rum.core :refer [defc]])
   (:require [re-natal.support :as support]
             [clojure.string :refer [split join lower-case]]
-            [pass-android.android.utils :refer [create-element hex-alph]]
+            [pass-android.android.utils :refer [string-matches create-element hex-alph]]
             [pass-android.android.actions :refer [dispatch!]]
             [goog.crypt.base64 :as b64]
             [rum.core :as rum]))
@@ -16,6 +16,7 @@
 (def action-button (partial create-element ActionButton))
 (def view (partial create-element (.-View ReactNative)))
 (def text (partial create-element (.-Text ReactNative)))
+(def activity-indicator (partial create-element (.-ActivityIndicator ReactNative)))
 (def text-input (partial create-element (.-TextInput ReactNative)))
 (def image (partial create-element (.-Image ReactNative)))
 (def flat-list (partial create-element (.. ReactNative -FlatList)))
@@ -34,9 +35,13 @@
                                 :onPress #(swap! state assoc
                                                  :file-to-decrypt path
                                                  :file-to-decrypt-name name)}
-                               (view {:style {:padding 20
-                                              :borderBottomWidth 1}}
-                                     (text name)))))
+                               (view {:flexDirection "row"
+                                      :alignItems "center"}
+                                     (icon {:name "lock"
+                                            :style {:paddingLeft 10}
+                                            :size 30})
+                                 (view {:style {:padding 20}}
+                                       (text name))))))
 
 (defc no-file-placeholder
   [state]
@@ -46,27 +51,10 @@
         (text {:style {:opacity 0.5
                        :fontSize 30}}
               "No passfiles found :(")
-        (touchable-native-feedback {:background selectable-background
-                                    :onPress #(dispatch! state :refresh-files)}
-                                   (view {:elevation 5
-                                          :style {:backgroundColor "#009688"
-                                                  :borderRadius 5
-                                                  :marginTop 30
-                                                  :padding 10}}
-                                         (text {:style {:color "white"
-                                                        :fontSize 20
-                                                        :textAlign "center"}}
-                                               "Refresh")))))
+        (text {:style {:opacity 0.5
+                       :fontSize 20}}
+              "Pull to refresh")))
 
-(defn matches
-  [string pattern]
-  (cond
-    (empty? pattern) true
-    (empty? string) false
-    :else (if (= (lower-case (first string))
-                 (lower-case (first pattern)))
-            (recur (rest string) (rest pattern))
-            (recur (rest string) pattern))))
 (defc password-list-header
   [state]
   (let [m @state
@@ -133,24 +121,21 @@
         searching? (get m :searching false)
         search (get m :search "")
         filtered-files (if searching?
-                         (filter (fn [{:keys [name]}] (matches name search))
+                         (filter (fn [{:keys [name]}] (string-matches name search))
                                  files)
                          files)
         refreshing (get m :refreshing false)]
     (view {:style {:flexDirection "column"
                    :flex 1}}
           (password-list-header state)
-          (if (empty? files)
-            (no-file-placeholder state)
-            (flat-list {:data filtered-files
-                        :onRefresh #(dispatch! state :refresh-files)
-                        :refreshing refreshing
-                        :ListEmptyComponent (text {:style {:fontSize 30
-                                                           :paddingTop 50
-                                                           :textAlign "center"
-                                                           :color "lightgrey"}}
-                                                  "No result")
-                        :renderItem #(render-row state %)}))
+          (flat-list {:data filtered-files
+                      :onRefresh #(dispatch! state :refresh-files)
+                      :refreshing refreshing
+                      :contentContainerStyle (if (empty? filtered-files)
+                                               {:flexGrow 1 :justifyContent "center"}
+                                               {})
+                      :ListEmptyComponent (no-file-placeholder state)
+                      :renderItem #(render-row state %)})
           (action-button {:buttonColor "#009688"
                           :size 60
                           :onPress #(swap! state assoc :new-pass {})}))))

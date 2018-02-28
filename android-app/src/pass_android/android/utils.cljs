@@ -14,3 +14,13 @@
   (.. Crypto -AES (encrypt plain k)))
 (defn decrypt [enc k]
   (.. Crypto -AES (decrypt enc k)))
+
+(defn string-matches
+  [string pattern]
+  (cond
+    (empty? pattern) true
+    (empty? string) false
+    :else (if (= (lower-case (first string))
+                 (lower-case (first pattern)))
+            (recur (rest string) (rest pattern))
+            (recur (rest string) pattern))))

@@ -7,6 +7,7 @@
             [pass-android.android.modals.drawer :refer [drawer-modal]]
             [pass-android.android.utils :refer [create-element hex-alph]]
             [pass-android.android.state :refer [app-state refs]]
+            [pass-android.android.actions :refer [dispatch!]]
             [rum.core :as rum]))
 
 (set! js/window.React (js/require "react"))
@@ -37,7 +38,7 @@
 (remove-watch app-state :app-state)
 (add-watch app-state :app-state #(mount-app))
 
-;; Modal opener watche
+;; Modal opener watcher
 (remove-watch app-state :drawer)
 (add-watch app-state :drawer
            (fn [_ _ old-s new-s]
@@ -50,5 +51,6 @@
                  (and (not old-drawer-open?) new-drawer-open?) (.openDrawer drawer-ref)))))
 
 (defn init []
-      (mount-app)
-      (.registerComponent app-registry "passAndroid" (fn [] root-component-factory)))
+  (mount-app)
+  (dispatch! app-state :refresh-files)
+  (.registerComponent app-registry "passAndroid" (fn [] root-component-factory)))
