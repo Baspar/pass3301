@@ -1,4 +1,11 @@
-(ns pass-android.android.utils)
+(ns pass-android.android.utils
+  (:require [clojure.string :refer [lower-case]]))
+
+(def ReactNative (js/require "react-native"))
+
+(def async-storage (.-AsyncStorage ReactNative))
+(def set-item (fn [k v] (.setItem async-storage k v)))
+(def get-item (fn [k] (.getItem async-storage k)))
 
 (defn create-element [& args]
   (if (map? (second args))

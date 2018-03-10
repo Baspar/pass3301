@@ -1,5 +1,6 @@
 (ns pass-android.android.actions
-  (:require [clojure.string :refer [join split]]))
+  (:require [clojure.string :refer [join split]]
+            [pass-android.android.utils :refer [get-item set-item]]))
 
 (def fs (js/require "react-native-fs"))
 
@@ -67,6 +68,7 @@
                       (assoc :folder new-folder)
                       (assoc :refreshing? true)
                       (dissoc :change-directory)))
+    (set-item "folder" folder)
     (-> (.readDir fs folder)
         (.then #(swap! state assoc
                        :files (->> (js->clj % :keywordize-keys true)
@@ -82,3 +84,7 @@
                                               :filename name}))))
                        :refreshing? false))
         (.catch #(swap! state assoc :refreshing? false)))))
+
+(defmethod dispatch! :new-password-cancel
+  [state _]
+  (swap! state dissoc :new-password))

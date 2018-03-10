@@ -138,4 +138,4 @@
                       :renderItem #(render-row state %)})
           (action-button {:buttonColor "#009688"
                           :size 60
-                          :onPress #(swap! state assoc :new-pass {})}))))
+                          :onPress #(swap! state assoc :new-password {})}))))

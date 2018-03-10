@@ -2,10 +2,11 @@
   (:require-macros [rum.core :refer [defc]])
   (:require [re-natal.support :as support]
             [pass-android.android.password-list :refer [password-list-page]]
+            [pass-android.android.modals.new-password :refer [new-password-modal]]
             [pass-android.android.modals.decrypt-password :refer [password-modal]]
             [pass-android.android.modals.change-directory :refer [change-directory-modal]]
             [pass-android.android.modals.drawer :refer [drawer-modal]]
-            [pass-android.android.utils :refer [create-element hex-alph]]
+            [pass-android.android.utils :refer [get-item create-element hex-alph]]
             [pass-android.android.state :refer [app-state refs]]
             [pass-android.android.actions :refer [dispatch!]]
             [rum.core :as rum]))
@@ -24,10 +25,9 @@
         (drawer-modal state
                       (status-bar {:backgroundColor "#009688"})
 
-                      (view {:style {:position "absolute"}}
-                            (password-modal state))
-                      (view {:style {:position "absolute"}}
-                            (change-directory-modal state))
+                      (view {:style {:position "absolute"}} (password-modal state))
+                      (view {:style {:position "absolute"}} (new-password-modal state))
+                      (view {:style {:position "absolute"}} (change-directory-modal state))
                       (password-list-page state))))
 
 (defonce root-component-factory (support/make-root-component-factory))
@@ -52,5 +52,7 @@
 
 (defn init []
   (mount-app)
-  (dispatch! app-state :refresh-files)
+  (->> (get-item "folder")
+       (.then #(do
+                 (dispatch! app-state :refresh-files))))
   (.registerComponent app-registry "passAndroid" (fn [] root-component-factory)))
