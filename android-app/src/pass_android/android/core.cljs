@@ -52,7 +52,7 @@
 
 (defn init []
   (mount-app)
-  (->> (get-item "folder")
-       (.then #(do
-                 (dispatch! app-state :refresh-files))))
+  (-> (get-item "folder")
+      (.then #(do
+                (dispatch! app-state :refresh-files))))
   (.registerComponent app-registry "passAndroid" (fn [] root-component-factory)))
